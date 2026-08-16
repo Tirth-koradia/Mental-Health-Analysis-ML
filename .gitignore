@@ -1,0 +1,15 @@
+# dataset
+*.csv
+*.xlsx
+*.ipynb
+
+# python
+__pycache__/
+*.pyc
+
+# local environment
+.env
+venv/
+
+# system
+.DS_Store

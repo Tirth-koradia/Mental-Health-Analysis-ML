@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Analysis - AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .input-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .char-count {
+            text-align: right;
+            color: #999;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .disorder-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .confidence {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .confidence-bar {
+            background: rgba(255,255,255,0.3);
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            background: white;
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .description {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .symptoms, .resources {
+            margin-top: 20px;
+        }
+
+        h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .all-predictions {
+            margin-top: 30px;
+        }
+
+        .prediction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .prediction-name {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .prediction-confidence {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .disclaimer {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .disclaimer strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1> Mental Health Analysis</h1>
+            <p class="subtitle">Mental Health Pattern Recognition by Tirth</p>
+        </header>
+
+        <div class="main-content">
+            <div class="card input-section">
+                <h2>Share Your Thoughts</h2>
+                <p style="margin-bottom: 20px; color: #666;">
+                    Describe how you've been feeling, your thoughts, or any concerns you'd like to discuss. 
+                    Be as detailed as possible for better analysis.
+                </p>
+                <textarea 
+                    id="userInput" 
+                    placeholder="Example: I've been feeling overwhelmed lately. I can't focus on my work, and I'm constantly worried about things that might go wrong. I have trouble sleeping and feel restless all the time..."
+                    maxlength="5000"
+                ></textarea>
+                <div class="char-count">
+                    <span id="charCount">0</span> / 5000 characters
+                </div>
+                <button onclick="analyzeText()" id="analyzeBtn">
+                    🔍 Analyze My Input
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Analyzing your input...</p>
+                </div>
+            </div>
+
+            <div class="card results-section" id="results">
+                <div class="result-header">
+                    <div class="disorder-name" id="disorderName">-</div>
+                    <div class="confidence">
+                        Confidence: <span id="confidencePercent">-</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill"></div>
+                    </div>
+                </div>
+
+                <div class="description" id="description">
+                    Loading...
+                </div>
+
+                <div class="symptoms">
+                    <h3>🔍 Common Symptoms</h3>
+                    <ul id="symptomsList"></ul>
+                </div>
+
+                <div class="resources">
+                    <h3>📚 Helpful Resources</h3>
+                    <ul id="resourcesList"></ul>
+                </div>
+
+                <div class="all-predictions">
+                    <h3>📊 Detailed Analysis</h3>
+                    <div id="allPredictionsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <strong>⚠️ Important Disclaimer</strong>
+            <p>
+                This tool uses AI to identify patterns and is NOT a substitute for professional medical advice, 
+                diagnosis, or treatment. Always seek the advice of qualified health providers with any questions 
+                you may have regarding a mental health condition.
+            </p>
+            <p style="margin-top: 10px;">
+                <strong>Crisis Support:</strong> If you're in crisis, please call 14416 (Suicide & Crisis Lifeline) 
+                or visit your nearest emergency room.
+            </p>
+        </div>
+
+        <div class="info-cards">
+            <div class="info-card">
+                <h3>🎯 Accuracy</h3>
+                <p>Our AI model is trained on thousands of real mental health discussions</p>
+            </div>
+            <div class="info-card">
+                <h3>🔒 Privacy</h3>
+                <p>Your data is processed securely and not shared</p>
+            </div>
+            <div class="info-card">
+                <h3>🤝 Support</h3>
+                <p>Remember, seeking help is a sign of strength, not weakness</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('userInput');
+        const charCount = document.getElementById('charCount');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+
+        // Character counter
+        textarea.addEventListener('input', () => {
+            charCount.textContent = textarea.value.length;
+        });
+
+        async function analyzeText() {
+            const text = textarea.value.trim();
+
+            if (text.length < 10) {
+                alert('Please provide a more detailed description (at least 10 characters)');
+                return;
+            }
+
+            // Show loading
+            analyzeBtn.disabled = true;
+            loading.style.display = 'block';
+            results.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Display results
+                displayResults(data);
+                results.classList.add('show');
+                
+                // Scroll to results
+                results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+                console.error('Error:', error);
+            } finally {
+                analyzeBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            const primary = data.primary_prediction;
+            const confidence = Number(primary.confidence);
+
+            // Header
+            document.getElementById('disorderName').textContent =
+                primary.disorder.toUpperCase();
+
+            document.getElementById('confidencePercent').textContent =
+                `${(confidence * 100).toFixed(2)}%`;
+
+            document.getElementById('confidenceFill').style.width =
+                `${confidence * 100}%`;
+
+            // Description
+            document.getElementById('description').innerHTML =
+                `<p>Prediction based on learned text patterns. This is not a medical diagnosis.</p>`;
+
+            // ✅ Render symptoms
+            const symptomsList = document.getElementById('symptomsList');
+            symptomsList.innerHTML = primary.symptoms && primary.symptoms.length
+                ? primary.symptoms.map(s => `<li>✓ ${s}</li>`).join('')
+                : '<li>No major symptoms detected.</li>';
+
+            // ✅ Render resources
+            const resourcesList = document.getElementById('resourcesList');
+            resourcesList.innerHTML = primary.resources && primary.resources.length
+                ? primary.resources.map(r => `<li>📌 ${r}</li>`).join('')
+                : '<li>No specific resources needed.</li>';
+
+            // All predictions
+            const allPredictionsList = document.getElementById('allPredictionsList');
+            allPredictionsList.innerHTML = data.all_predictions
+                .map(p => `
+                    <div class="prediction-item">
+                        <span class="prediction-name">${p.disorder}</span>
+                        <span class="prediction-confidence">${p.percentage}</span>
+                    </div>
+                `)
+                .join('');
+        }
+
+        // Allow Enter + Ctrl to submit
+        textarea.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                analyzeText();
+            }
+        });
+    </script>
+</body>
+</html>
